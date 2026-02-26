@@ -1,70 +1,958 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Kiosque do Açaí RJ</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#6B21A8"/>
-<script>
-if ('serviceWorker' in navigator) {
-navigator.serviceWorker.register('service-worker.js');
-}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kiosque do Açaí RJ</title>
+  <meta name="description" content="Peça seu açaí online: copos, potes, bebidas e lanchinhos. Entrega rápida no RJ." />
 
-function verificarHorario() {
-const agora = new Date();
-const dia = agora.getDay();
-const hora = agora.getHours();
+  <style>
+    :root{
+      --acai-purple:#6a00ff;      /* Roxo Açaí */
+      --gema-yellow:#ffd400;      /* Amarelo Gema */
+      --bg:#0f0620;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.12);
+      --text:#ffffff;
+      --muted: rgba(255,255,255,.75);
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(255,212,0,.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(106,0,255,.30), transparent 55%),
+        radial-gradient(700px 500px at 50% 100%, rgba(106,0,255,.22), transparent 60%),
+        linear-gradient(180deg, #0b0418, var(--bg));
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      background: linear-gradient(90deg, rgba(106,0,255,.25), rgba(255,212,0,.14));
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: var(--radius);
+      padding:14px 14px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position:sticky; top:12px; z-index:20;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, var(--gema-yellow), var(--acai-purple));
+      box-shadow: 0 10px 30px rgba(255,212,0,.15);
+      border:1px solid rgba(255,255,255,.2);
+    }
+    .brand h1{font-size:16px;margin:0;line-height:1.1}
+    .brand p{margin:2px 0 0 0;color:var(--muted);font-size:12px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:12px;
+    }
+    .statusDot{width:9px;height:9px;border-radius:999px;background:var(--bad)}
+    .statusOpen .statusDot{background:var(--ok)}
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding:11px 14px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color:var(--text);
+      text-decoration:none;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s transform, .18s opacity, .18s background;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.14)}
+    .btnPrimary{
+      background: linear-gradient(90deg, var(--acai-purple), #8a38ff);
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .btnYellow{
+      background: linear-gradient(90deg, var(--gema-yellow), #ffe57a);
+      color:#1a102d;
+      border:1px solid rgba(0,0,0,.12);
+    }
+    .btnDanger{
+      background: rgba(239,68,68,.18);
+      border:1px solid rgba(239,68,68,.35);
+    }
+    .btn:disabled, .btn[aria-disabled="true"]{
+      opacity:.45; cursor:not-allowed; transform:none;
+    }
 
-const deliveryAberto = dia !== 1 && hora >= 15 && hora < 22;
+    .grid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .chips{justify-content:flex-start}
+      .topbar{flex-direction:column; align-items:flex-start}
+    }
 
-if(!deliveryAberto){
-document.getElementById("fechado").style.display = "flex";
-}
-}
+    .card{
+      background: var(--card);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    .cardHd{padding:16px 16px 0 16px}
+    .cardHd h2{margin:0;font-size:16px}
+    .cardHd p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+    .cardBd{padding:16px}
+    .twoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 680px){ .twoCols{grid-template-columns:1fr} }
 
-window.onload = verificarHorario;
-</script>
-<style>
-body{margin:0;font-family:Arial;background:#f3e8ff;text-align:center;}
-header{background:#6B21A8;color:white;padding:20px;font-size:24px;font-weight:bold;}
-.section{padding:30px 20px;}
-.button{background:#FACC15;padding:15px 25px;border-radius:12px;font-weight:bold;text-decoration:none;color:#4C1D95;display:inline-block;margin-top:20px;}
-#fechado{position:fixed;inset:0;background:#6B21A8;color:white;display:none;justify-content:center;align-items:center;font-size:28px;font-weight:bold;z-index:999;text-align:center;padding:20px;}
-</style>
+    .hero{
+      display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+      padding:16px;
+      background:
+        radial-gradient(700px 240px at 10% 0%, rgba(255,212,0,.18), transparent 55%),
+        radial-gradient(700px 240px at 90% 0%, rgba(106,0,255,.25), transparent 55%);
+    }
+    @media (max-width: 860px){ .hero{grid-template-columns:1fr} }
+    .kioskImg{
+      width:100%;
+      height:260px;
+      border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      display:flex; align-items:center; justify-content:center;
+      color: rgba(255,255,255,.70);
+      position:relative;
+      overflow:hidden;
+    }
+    .kioskImg img{width:100%;height:100%;object-fit:cover;display:block}
+    .kioskBadge{
+      position:absolute; left:12px; bottom:12px;
+      background: rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.18);
+      padding:8px 10px; border-radius:999px;
+      font-size:12px; font-weight:700;
+    }
+
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tab{
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      cursor:pointer;
+      font-weight:800;
+      font-size:12px;
+    }
+    .tab.active{
+      background: linear-gradient(90deg, rgba(255,212,0,.95), rgba(255,229,122,.95));
+      color:#1a102d;
+      border:1px solid rgba(0,0,0,.12);
+    }
+
+    .list{display:grid;gap:10px;margin-top:12px}
+    .item{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      padding:12px;border-radius:16px;
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .item .meta{display:flex;flex-direction:column;gap:2px}
+    .item .name{font-weight:900}
+    .item .desc{font-size:12px;color:var(--muted)}
+    .price{font-weight:900}
+    .small{font-size:12px;color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      background: rgba(106,0,255,.22);
+      border:1px solid rgba(106,0,255,.35);
+      padding:6px 10px;border-radius:999px;
+      font-size:12px;font-weight:800;
+    }
+    .pillYellow{
+      background: rgba(255,212,0,.20);
+      border:1px solid rgba(255,212,0,.35);
+    }
+
+    .field{
+      display:flex;flex-direction:column;gap:6px;margin-top:10px
+    }
+    label{font-size:12px;color:var(--muted);font-weight:800}
+    input, select, textarea{
+      width:100%;
+      padding:11px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:84px;resize:vertical}
+
+    .cartLine{
+      display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
+      padding:10px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+    }
+    .qty{
+      display:flex;gap:6px;align-items:center;
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      padding:6px 8px;
+      background: rgba(0,0,0,.18);
+    }
+    .qty button{
+      width:28px;height:28px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+    }
+
+    .modal{
+      position:fixed; inset:0; background: rgba(0,0,0,.62);
+      display:none; align-items:center; justify-content:center; padding:16px;
+      z-index:50;
+    }
+    .modal.open{display:flex}
+    .modalBox{
+      width:min(780px, 100%);
+      background: rgba(20,8,44,.92);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 22px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+    .modalHd{
+      padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background: linear-gradient(90deg, rgba(106,0,255,.28), rgba(255,212,0,.16));
+      border-bottom:1px solid rgba(255,255,255,.14);
+    }
+    .modalHd strong{font-size:14px}
+    .x{
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
+      color:var(--text);
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modalBd{padding:16px}
+    .optGrid{
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    }
+    @media (max-width:720px){ .optGrid{grid-template-columns:1fr} }
+
+    .checkList{
+      display:flex; flex-wrap:wrap; gap:8px;
+      padding:10px;border-radius:16px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      max-height:170px; overflow:auto;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      font-size:12px; font-weight:800;
+    }
+    .tag input{width:auto}
+    .footerNote{margin-top:10px;color:var(--muted);font-size:12px}
+    .sep{height:1px;background:rgba(255,255,255,.12);margin:12px 0}
+  </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-<div id="fechado">
-🚫 DELIVERY FECHADO NO MOMENTO<br><br>
-Terça a Domingo<br>
-15:00 às 22:00
-</div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Kiosque do Açaí RJ</h1>
+          <p>Peça fácil • Mensagem completa no WhatsApp • Sem complicação</p>
+        </div>
+      </div>
 
-<header>Kiosque do Açaí RJ</header>
+      <div class="chips">
+        <span class="chip" id="openChip">
+          <span class="statusDot" aria-hidden="true"></span>
+          <span id="openText">Verificando delivery…</span>
+        </span>
+        <span class="chip">
+          ⏰ <strong>Delivery</strong> Ter–Dom 15:00–22:00
+        </span>
+        <span class="chip">
+          🏪 <strong>Presencial</strong> Todos os dias 14:00–23:00
+        </span>
+      </div>
+    </header>
 
-<div class="section">
-<h2>📍 Onde Estamos</h2>
-<p>
-Rua Luís Coutinho Cavalcante, 191<br>
-Quiosque 4 - Guadalupe<br>
-Rio de Janeiro - RJ<br>
-CEP: 21675-310
-</p>
-</div>
+    <div class="grid">
+      <!-- ESQUERDA -->
+      <main class="card">
+        <section class="hero">
+          <div>
+            <div class="pill pillYellow">📍 Onde estamos</div>
+            <h2 style="margin:10px 0 6px 0; font-size:18px">Rua Luís Coutinho Cavalcante, 191 • Quiosque 4 - Guadalupe</h2>
+            <p style="margin:0;color:var(--muted);font-weight:700">Rio de Janeiro - RJ • CEP: 21675-310</p>
 
-<div class="section">
-<h2>🕒 Horários</h2>
-<p><strong>Presencial:</strong> Todos os dias 14:00 às 23:00</p>
-<p><strong>Delivery:</strong> Terça a Domingo 15:00 às 22:00</p>
-</div>
+            <div class="btnRow" style="margin-top:12px">
+              <a class="btn btnPrimary" id="btnWhatsapp" target="_blank" rel="noopener">📲 WhatsApp</a>
+              <a class="btn btnYellow" id="btnInstagram" target="_blank" rel="noopener">📸 Instagram</a>
+              <a class="btn" href="#pedido">🍧 Fazer pedido</a>
+            </div>
 
-<div class="section">
-<h2>📲 Faça seu Pedido</h2>
-<a class="button" href="https://wa.me/5521964154361" target="_blank">
-Pedir pelo WhatsApp
-</a>
-</div>
+            <div class="sep"></div>
 
+            <div class="twoCols">
+              <div class="card" style="padding:12px">
+                <div class="pill">⏰ Horários</div>
+                <div style="margin-top:10px;font-weight:900">Presencial</div>
+                <div class="small">Todos os dias 14:00 às 23:00</div>
+                <div style="margin-top:10px;font-weight:900">Delivery</div>
+                <div class="small">Terça a Domingo 15:00 às 22:00</div>
+              </div>
+
+              <div class="card" style="padding:12px">
+                <div class="pill pillYellow">🗺️ Localização</div>
+                <div class="small" style="margin-top:10px">Clique no mapa para abrir no celular.</div>
+                <div style="margin-top:10px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.14)">
+                  <iframe
+                    title="Mapa Kiosque do Açaí"
+                    width="100%" height="150" style="border:0"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=Rua%20Lu%C3%ADs%20Coutinho%20Cavalcante%20191%20Guadalupe%20Rio%20de%20Janeiro%20RJ&output=embed">
+                  </iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kioskImg">
+            <!-- Coloque a imagem em /quiosque.jpg (mesma pasta do index.html) -->
+            <img src="quiosque.jpg" alt="Imagem do quiosque" onerror="this.remove(); this.parentElement.insertAdjacentHTML('beforeend','<div style=&quot;padding:18px;text-align:center;max-width:360px;&quot;><strong>Falta a imagem do quiosque</strong><div style=&quot;margin-top:6px;color:rgba(255,255,255,.75);font-size:12px&quot;>Coloque um arquivo <b>quiosque.jpg</b> na mesma pasta deste site.</div></div>')">
+            <div class="kioskBadge">🏪 Nosso quiosque</div>
+          </div>
+        </section>
+
+        <section class="cardBd" id="pedido">
+          <div class="pill">🍽️ Cardápio</div>
+          <div class="tabs" role="tablist" aria-label="Cardápio">
+            <button class="tab active" data-tab="acai" role="tab">Copos & Potes</button>
+            <button class="tab" data-tab="bebidas" role="tab">Bebidas</button>
+            <button class="tab" data-tab="lanchinhos" role="tab">Lanchinhos</button>
+          </div>
+
+          <div id="tabContent" class="list"></div>
+
+          <p class="footerNote">
+            ✅ O pedido vai para o WhatsApp com: itens + nome + endereço + total + pagamento.
+          </p>
+        </section>
+
+        <section class="cardBd">
+          <div class="pill pillYellow">⭐ Feedback dos clientes</div>
+
+          <div class="twoCols" style="margin-top:12px">
+            <div class="card" style="padding:12px">
+              <strong>Deixe sua avaliação</strong>
+              <div class="field">
+                <label>Seu nome</label>
+                <input id="fbName" placeholder="Ex.: Bianca" />
+              </div>
+              <div class="field">
+                <label>Nota</label>
+                <select id="fbStars">
+                  <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                  <option value="4">⭐⭐⭐⭐ (4)</option>
+                  <option value="3">⭐⭐⭐ (3)</option>
+                  <option value="2">⭐⭐ (2)</option>
+                  <option value="1">⭐ (1)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Comentário</label>
+                <textarea id="fbText" placeholder="O que você achou?"></textarea>
+              </div>
+              <button class="btn btnYellow" id="btnSaveFeedback">Salvar feedback</button>
+              <div class="footerNote">*As avaliações ficam visíveis neste aparelho/navegador (localStorage).</div>
+            </div>
+
+            <div class="card" style="padding:12px">
+              <strong>Últimos feedbacks</strong>
+              <div id="feedbackList" class="list" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- DIREITA: CARRINHO / CHECKOUT -->
+      <aside class="card">
+        <div class="cardHd">
+          <h2>🛒 Seu pedido</h2>
+          <p>Monte o pedido aqui e depois envie para o WhatsApp.</p>
+        </div>
+        <div class="cardBd">
+          <div id="cartEmpty" class="small">Seu carrinho está vazio. Escolha itens no cardápio.</div>
+          <div id="cartLines" class="list" style="margin-top:10px"></div>
+
+          <div class="sep"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <strong>Total</strong>
+            <strong id="cartTotal">R$ 0,00</strong>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="pill">📦 Dados para entrega</div>
+
+          <div class="field">
+            <label>Nome</label>
+            <input id="custName" placeholder="Seu nome" />
+          </div>
+
+          <div class="field">
+            <label>Endereço (para delivery)</label>
+            <input id="custAddress" placeholder="Rua, número, bairro, referência" />
+          </div>
+
+          <div class="field">
+            <label>Forma de pagamento</label>
+            <select id="payment">
+              <option value="PIX">PIX</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Observações (opcional)</label>
+            <textarea id="notes" placeholder="Ex.: sem granola, tocar campainha..."></textarea>
+          </div>
+
+          <div class="btnRow" style="margin-top:12px">
+            <button class="btn btnPrimary" id="btnSend">📲 Enviar pedido no WhatsApp</button>
+            <button class="btn btnDanger" id="btnClear">Limpar</button>
+          </div>
+
+          <div id="closedWarn" class="footerNote" style="display:none;margin-top:10px">
+            🚫 Delivery fechado no momento. O botão de enviar fica bloqueado fora do horário (Ter–Dom 15:00–22:00).
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- MODAL DE PERSONALIZAÇÃO AÇAÍ -->
+  <div class="modal" id="modal">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-label="Personalizar item">
+      <div class="modalHd">
+        <strong id="modalTitle">Personalizar</strong>
+        <button class="x" id="modalClose">Fechar ✕</button>
+      </div>
+      <div class="modalBd">
+        <div class="optGrid">
+          <div>
+            <div class="pill">🥣 Base</div>
+            <div class="field">
+              <label>Escolha</label>
+              <select id="baseType">
+                <option value="Açaí">Açaí</option>
+                <option value="Sorvete">Sorvete</option>
+                <option value="Açaí e Sorvete">Açaí e Sorvete</option>
+              </select>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="pill pillYellow">🍓 Sabores</div>
+            <div class="small" style="margin:8px 0">Selecione 1 ou mais sabores (no “Açaí e Sorvete” você pode misturar).</div>
+            <div class="checkList" id="flavorList"></div>
+          </div>
+
+          <div>
+            <div class="pill">🍫 Coberturas</div>
+            <div class="small" style="margin:8px 0">Opcional.</div>
+            <div class="checkList" id="toppingList"></div>
+
+            <div class="sep"></div>
+
+            <div class="pill">🥜 Complementos</div>
+            <div class="small" style="margin:8px 0">Opcional.</div>
+            <div class="checkList" id="extraList"></div>
+
+            <div class="footerNote">* “Fini Beijos” soma +R$ 1,00 automaticamente.</div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div class="small">Preço do item</div>
+            <strong id="modalPrice">R$ 0,00</strong>
+          </div>
+          <button class="btn btnYellow" id="btnAddCustomized">Adicionar ao carrinho</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ========= Config =========
+  const WHATSAPP_NUMBER_E164 = "5521964154361"; // 55 + DDD + número (sem espaços)
+  const INSTAGRAM_URL = "https://instagram.com/SEU_INSTAGRAM_AQUI"; // troque aqui
+  const ADDRESS_TEXT = "Rua Luís Coutinho Cavalcante, 191 — Quiosque 4 - Guadalupe — Rio de Janeiro - RJ — CEP: 21675-310";
+
+  // ========= Menu =========
+  const copos = [
+    { id:"copo-100",  name:"Copo 100ml",  price:3.00,  desc:"Tamanho pequeno" },
+    { id:"copo-150",  name:"Copo 150ml",  price:5.00,  desc:"Tamanho pequeno" },
+    { id:"copo-200",  name:"Copo 200ml",  price:7.00,  desc:"Tamanho médio" },
+    { id:"copo-300",  name:"Copo 300ml",  price:9.00,  desc:"Tamanho médio" },
+    { id:"copo-400",  name:"Copo 400ml",  price:13.00, desc:"Tamanho grande" },
+    { id:"copo-500",  name:"Copo 500ml",  price:15.00, desc:"Tamanho grande" },
+    { id:"copo-770",  name:"Copo 770ml",  price:18.00, desc:"Tamanho família" },
+    { id:"copo-1l",   name:"Copo 1L",     price:25.00, desc:"Tamanho família" },
+  ];
+
+  const potes = [
+    { id:"pote-2l-sorvete", name:"Pote 2L Sorvete", price:35.00, desc:"Pote grande" },
+    { id:"pote-2l-acai",    name:"Pote 2L Açaí",    price:45.00, desc:"Pote grande" },
+    { id:"pote-2l-misto",   name:"Pote 2L Açaí e Sorvete", price:45.00, desc:"Pote grande" },
+  ];
+
+  const saboresAcai = ["Natural","Banana","Morango","Maracujá","Cupuaçú","Nutella","Kinder Ovo","Rafaello","Ferrero Rocher","Óreo"];
+  const saboresSorvete = ["Flocos","Bombom de Morango","Ovo Maltine","Ninho Trufado","Torta Alemã","Pavê Italiano"];
+
+  const coberturas = [
+    "Chocolate","Chocolate suíço","Chocomenta","Menta","Morango","Frutas vermelhas","Cereja","Tutti-frutti","Porto blue",
+    "Leite condensado","Doce de leite","Caramelo","Banana caramelada","Uva","Amora","Maçã verde","Kiwi","Milho verde","Limão",
+    "Graviola","Maracujá","Abacaxi","Café","Fini Beijos (+R$1,00)"
+  ];
+
+  const complementos = [
+    "Paçoca","Amendoim picado","Leite em pó","Granola","Aveia","Choco ball","Sucrilhos","Cereal colorido",
+    "Granulado","Jujuba","Biscoitinho biju"
+  ];
+
+  const bebidas = [
+    { id:"agua-sg", name:"Água sem gás", price:2.50, desc:"Garrafinha" },
+    { id:"agua-cg", name:"Água com gás", price:3.00, desc:"Garrafinha" },
+    { id:"guaravita", name:"Guaravita", price:2.00, desc:"Lata" },
+    { id:"coca-lata", name:"Coca lata 350ml", price:6.00, desc:"Geladinha" },
+    { id:"coca-200", name:"Coca 200ml", price:3.00, desc:"Pequena" },
+  ];
+
+  const lanchinhos = [
+    { id:"piraque-recheado", name:"Biscoito recheado Piraquê", price:5.00, desc:"Chocolate / Morango / Pitty" },
+    { id:"piraque-sortido", name:"Biscoito Piraquê", price:4.00, desc:"Presuntinho / Salgadinho assado" },
+    { id:"fandangos", name:"Biscoito Fandangos", price:4.00, desc:"Salgadinho" },
+    { id:"pele", name:"Biscoito Pele", price:4.00, desc:"Salgadinho" },
+    { id:"cajuzinho", name:"Cajuzinho", price:2.50, desc:"Docinho" },
+    { id:"bananada", name:"Bananada", price:0.50, desc:"Doce" },
+    { id:"freegells", name:"Freegells", price:1.50, desc:"Balinha" },
+    { id:"bala-coracao", name:"Bala de coração (4 un)", price:1.00, desc:"Pacotinho" },
+    { id:"bala-cafe", name:"Bala de café (4 un)", price:1.00, desc:"Pacotinho" },
+    { id:"bala-mista", name:"Bala coração e café (4 un)", price:1.00, desc:"Pacotinho" },
+    { id:"amendoim", name:"Amendoim", price:1.50, desc:"Salgadinho" },
+  ];
+
+  // ========= Helpers =========
+  const money = (n) => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+  // ========= Delivery schedule (America/Sao_Paulo) =========
+  // Terça a Domingo 15:00–22:00
+  function isDeliveryOpenNow(){
+    // Usa relógio do dispositivo do cliente (normalmente Brasil)
+    const now = new Date();
+    const day = now.getDay(); // 0 dom ... 1 seg ... 6 sáb
+    const minutes = now.getHours()*60 + now.getMinutes();
+    const openMin = 15*60;
+    const closeMin = 22*60;
+
+    const isMonday = (day === 1);
+    const inWindow = minutes >= openMin && minutes <= closeMin;
+    const allowedDay = !isMonday; // terça..domingo (inclui domingo=0 e sábado=6)
+
+    return allowedDay && inWindow;
+  }
+
+  function updateOpenUI(){
+    const open = isDeliveryOpenNow();
+    const chip = document.getElementById("openChip");
+    const txt = document.getElementById("openText");
+    const warn = document.getElementById("closedWarn");
+    const sendBtn = document.getElementById("btnSend");
+
+    if(open){
+      chip.classList.add("statusOpen");
+      txt.textContent = "Delivery ABERTO agora";
+      warn.style.display = "none";
+      sendBtn.disabled = false;
+      sendBtn.setAttribute("aria-disabled","false");
+    }else{
+      chip.classList.remove("statusOpen");
+      txt.textContent = "Delivery FECHADO no momento";
+      warn.style.display = "block";
+      sendBtn.disabled = true; // regra pedida
+      sendBtn.setAttribute("aria-disabled","true");
+    }
+  }
+
+  // ========= Tabs render =========
+  const tabContent = document.getElementById("tabContent");
+  const tabs = document.querySelectorAll(".tab");
+  let activeTab = "acai";
+
+  function renderTab(){
+    tabContent.innerHTML = "";
+
+    if(activeTab === "acai"){
+      const header1 = document.createElement("div");
+      header1.className = "pill";
+      header1.textContent = "Copos";
+      tabContent.appendChild(header1);
+      copos.forEach(it => tabContent.appendChild(renderItem(it, true)));
+
+      const header2 = document.createElement("div");
+      header2.className = "pill pillYellow";
+      header2.textContent = "Potes";
+      tabContent.appendChild(header2);
+      potes.forEach(it => tabContent.appendChild(renderItem(it, true)));
+
+    } else if(activeTab === "bebidas"){
+      bebidas.forEach(it => tabContent.appendChild(renderItem(it, false)));
+    } else {
+      lanchinhos.forEach(it => tabContent.appendChild(renderItem(it, false)));
+    }
+  }
+
+  function renderItem(it, customizable){
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div class="meta">
+        <div class="name">${it.name}</div>
+        <div class="desc">${it.desc || ""}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="price">${money(it.price)}</div>
+        <button class="btn btnYellow" style="padding:10px 12px" data-id="${it.id}">
+          ${customizable ? "Personalizar" : "Adicionar"}
+        </button>
+      </div>
+    `;
+    row.querySelector("button").addEventListener("click", () => {
+      if(customizable) openCustomizeModal(it);
+      else addToCart({ ...it, qty:1, details:null });
+    });
+    return row;
+  }
+
+  tabs.forEach(t => t.addEventListener("click", () => {
+    tabs.forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    activeTab = t.dataset.tab;
+    renderTab();
+  }));
+
+  // ========= Cart =========
+  let cart = []; // {id,name,price,qty,details, extraPrice}
+
+  const cartEmpty = document.getElementById("cartEmpty");
+  const cartLines = document.getElementById("cartLines");
+  const cartTotalEl = document.getElementById("cartTotal");
+
+  function addToCart(item){
+    // se existir mesmo id+details, soma qty
+    const key = item.id + "||" + (item.details || "");
+    const idx = cart.findIndex(x => (x.id + "||" + (x.details || "")) === key);
+    if(idx >= 0) cart[idx].qty += item.qty;
+    else cart.push(item);
+    renderCart();
+  }
+
+  function renderCart(){
+    cartLines.innerHTML = "";
+    cartEmpty.style.display = cart.length ? "none" : "block";
+
+    cart.forEach((it, i) => {
+      const line = document.createElement("div");
+      line.className = "cartLine";
+      const unit = it.price + (it.extraPrice || 0);
+      const subtotal = unit * it.qty;
+
+      line.innerHTML = `
+        <div style="min-width:0">
+          <div style="font-weight:900">${it.name}</div>
+          ${it.details ? `<div class="small" style="margin-top:4px">${it.details}</div>` : ""}
+          <div class="small" style="margin-top:6px">Unit: ${money(unit)} • Subtotal: <b>${money(subtotal)}</b></div>
+        </div>
+        <div class="qty">
+          <button aria-label="Diminuir">−</button>
+          <strong>${it.qty}</strong>
+          <button aria-label="Aumentar">+</button>
+        </div>
+      `;
+
+      const [btnMinus, btnPlus] = line.querySelectorAll("button");
+      btnMinus.addEventListener("click", () => {
+        cart[i].qty -= 1;
+        if(cart[i].qty <= 0) cart.splice(i,1);
+        renderCart();
+      });
+      btnPlus.addEventListener("click", () => {
+        cart[i].qty += 1;
+        renderCart();
+      });
+
+      cartLines.appendChild(line);
+    });
+
+    const total = cart.reduce((sum, it) => sum + (it.qty * (it.price + (it.extraPrice || 0))), 0);
+    cartTotalEl.textContent = money(total);
+  }
+
+  document.getElementById("btnClear").addEventListener("click", () => {
+    cart = [];
+    renderCart();
+  });
+
+  // ========= Modal customization =========
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalPrice = document.getElementById("modalPrice");
+  const modalClose = document.getElementById("modalClose");
+  const baseType = document.getElementById("baseType");
+  const flavorList = document.getElementById("flavorList");
+  const toppingList = document.getElementById("toppingList");
+  const extraList = document.getElementById("extraList");
+  const btnAddCustomized = document.getElementById("btnAddCustomized");
+
+  let currentItem = null;
+
+  function openCustomizeModal(it){
+    currentItem = { ...it };
+    modalTitle.textContent = `Personalizar: ${it.name} (${money(it.price)})`;
+    baseType.value = "Açaí";
+
+    // build lists
+    flavorList.innerHTML = "";
+    toppingList.innerHTML = "";
+    extraList.innerHTML = "";
+
+    function addCheck(container, label){
+      const id = "chk-" + Math.random().toString(16).slice(2);
+      const el = document.createElement("label");
+      el.className = "tag";
+      el.innerHTML = `<input type="checkbox" id="${id}" value="${label}"> <span>${label}</span>`;
+      container.appendChild(el);
+    }
+
+    // sabores (começa com açaí)
+    saboresAcai.concat(saboresSorvete).forEach(s => addCheck(flavorList, s));
+    coberturas.forEach(s => addCheck(toppingList, s));
+    complementos.forEach(s => addCheck(extraList, s));
+
+    modalPrice.textContent = money(it.price);
+    modal.classList.add("open");
+  }
+
+  function closeModal(){
+    modal.classList.remove("open");
+    currentItem = null;
+  }
+  modalClose.addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
+
+  function getChecked(container){
+    return [...container.querySelectorAll("input[type=checkbox]:checked")].map(x => x.value);
+  }
+
+  btnAddCustomized.addEventListener("click", () => {
+    if(!currentItem) return;
+
+    const base = baseType.value;
+    const flavors = getChecked(flavorList);
+    const tops = getChecked(toppingList);
+    const extras = getChecked(extraList);
+
+    let extraPrice = 0;
+    if(tops.some(t => t.toLowerCase().includes("fini beijos"))) extraPrice += 1.00;
+
+    const detailsParts = [];
+    detailsParts.push(`<b>Base:</b> ${base}`);
+    if(flavors.length) detailsParts.push(`<b>Sabores:</b> ${flavors.join(", ")}`);
+    if(tops.length) detailsParts.push(`<b>Coberturas:</b> ${tops.join(", ")}`);
+    if(extras.length) detailsParts.push(`<b>Complementos:</b> ${extras.join(", ")}`);
+    if(extraPrice > 0) detailsParts.push(`<b>Acréscimos:</b> ${money(extraPrice)}`);
+
+    addToCart({
+      id: currentItem.id,
+      name: currentItem.name,
+      price: currentItem.price,
+      qty: 1,
+      details: detailsParts.join(" • "),
+      extraPrice
+    });
+
+    closeModal();
+  });
+
+  // ========= WhatsApp / Instagram buttons =========
+  const btnWhatsapp = document.getElementById("btnWhatsapp");
+  btnWhatsapp.href = `https://wa.me/${WHATSAPP_NUMBER_E164}?text=${encodeURIComponent("Olá! Quero fazer um pedido no Kiosque do Açaí RJ 😊")}`;
+
+  const btnInstagram = document.getElementById("btnInstagram");
+  btnInstagram.href = INSTAGRAM_URL;@kiosquedoacairj
+
+  // ========= Send order =========
+  document.getElementById("btnSend").addEventListener("click", () => {
+    // bloqueio de horário (regra pedida)
+    if(!isDeliveryOpenNow()){
+      alert("Delivery fechado no momento (Ter–Dom 15:00–22:00).");
+      updateOpenUI();
+      return;
+    }
+    if(cart.length === 0){
+      alert("Seu carrinho está vazio. Adicione itens antes de enviar.");
+      return;
+    }
+
+    const name = document.getElementById("custName").value.trim();
+    const address = document.getElementById("custAddress").value.trim();
+    const pay = document.getElementById("payment").value;
+    const notes = document.getElementById("notes").value.trim();
+
+    if(!name){ alert("Informe seu nome."); return; }
+    if(!address){ alert("Informe o endereço para delivery."); return; }
+
+    const total = cart.reduce((sum, it) => sum + (it.qty * (it.price + (it.extraPrice || 0))), 0);
+
+    const lines = [];
+    lines.push("📍 *Novo Pedido — Kiosque do Açaí RJ*");
+    lines.push("");
+    lines.push("🍧 *Itens:*");
+
+    cart.forEach(it => {
+      const unit = it.price + (it.extraPrice || 0);
+      const sub = unit * it.qty;
+      lines.push(`- ${it.qty}x ${it.name} (${money(unit)}) = ${money(sub)}`);
+      if(it.details){
+        // tira tags HTML
+        const clean = it.details.replaceAll(/<[^>]*>/g,"");
+        lines.push(`  • ${clean}`);
+      }
+    });
+
+    lines.push("");
+    lines.push(`🧑 *Nome:* ${name}`);
+    lines.push(`📍 *Endereço:* ${address}`);
+    lines.push(`💳 *Pagamento:* ${pay}`);
+    lines.push(`💰 *Total:* ${money(total)}`);
+
+    if(notes){
+      lines.push(`📝 *Obs:* ${notes}`);
+    }
+
+    lines.push("");
+    lines.push(`🏪 *Referência do quiosque:* ${ADDRESS_TEXT}`);
+
+    const msg = lines.join("\n");
+    const url = `https://wa.me/${WHATSAPP_NUMBER_E164}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener");
+  });
+
+  // ========= Feedback (localStorage) =========
+  const FB_KEY = "kiosque_acai_feedback_v1";
+
+  function loadFeedback(){
+    try{
+      return JSON.parse(localStorage.getItem(FB_KEY) || "[]");
+    }catch{
+      return [];
+    }
+  }
+  function saveFeedback(list){
+    localStorage.setItem(FB_KEY, JSON.stringify(list.slice(0, 30)));
+  }
+  function renderFeedback(){
+    const el = document.getElementById("feedbackList");
+    const list = loadFeedback();
+    el.innerHTML = "";
+    if(list.length === 0){
+      el.innerHTML = `<div class="small">Nenhum feedback ainda. Seja o primeiro! ⭐</div>`;
+      return;
+    }
+    list.slice(0,10).forEach(f => {
+      const card = document.createElement("div");
+      card.className = "item";
+      const stars = "⭐".repeat(Number(f.stars || 5));
+      card.innerHTML = `
+        <div class="meta">
+          <div class="name">${stars} — ${f.name || "Cliente"}</div>
+          <div class="desc">${(f.text || "").replaceAll("<","&lt;").replaceAll(">","&gt;")}</div>
+        </div>
+        <div class="small">${f.date}</div>
+      `;
+      el.appendChild(card);
+    });
+  }
+
+  document.getElementById("btnSaveFeedback").addEventListener("click", () => {
+    const name = document.getElementById("fbName").value.trim() || "Cliente";
+    const stars = document.getElementById("fbStars").value;
+    const text = document.getElementById("fbText").value.trim();
+    if(!text){ alert("Escreva um comentário antes de salvar."); return; }
+
+    const list = loadFeedback();
+    const d = new Date();
+    const date = d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    list.unshift({ name, stars, text, date });
+    saveFeedback(list);
+
+    document.getElementById("fbText").value = "";
+    renderFeedback();
+  });
+
+  // ========= Init =========
+  renderTab();
+  renderCart();
+  renderFeedback();
+  updateOpenUI();
+  setInterval(updateOpenUI, 20_000); // atualiza a cada 20s
+})();
+</script>
 </body>
 </html>
