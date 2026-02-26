@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kiosque do Açaí RJ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6B21A8"/>
+<script>
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('service-worker.js');
+}
+
+function verificarHorario() {
+const agora = new Date();
+const dia = agora.getDay();
+const hora = agora.getHours();
+
+const deliveryAberto = dia !== 1 && hora >= 15 && hora < 22;
+
+if(!deliveryAberto){
+document.getElementById("fechado").style.display = "flex";
+}
+}
+
+window.onload = verificarHorario;
+</script>
+<style>
+body{margin:0;font-family:Arial;background:#f3e8ff;text-align:center;}
+header{background:#6B21A8;color:white;padding:20px;font-size:24px;font-weight:bold;}
+.section{padding:30px 20px;}
+.button{background:#FACC15;padding:15px 25px;border-radius:12px;font-weight:bold;text-decoration:none;color:#4C1D95;display:inline-block;margin-top:20px;}
+#fechado{position:fixed;inset:0;background:#6B21A8;color:white;display:none;justify-content:center;align-items:center;font-size:28px;font-weight:bold;z-index:999;text-align:center;padding:20px;}
+</style>
+</head>
+<body>
+
+<div id="fechado">
+🚫 DELIVERY FECHADO NO MOMENTO<br><br>
+Terça a Domingo<br>
+15:00 às 22:00
+</div>
+
+<header>Kiosque do Açaí RJ</header>
+
+<div class="section">
+<h2>📍 Onde Estamos</h2>
+<p>
+Rua Luís Coutinho Cavalcante, 191<br>
+Quiosque 4 - Guadalupe<br>
+Rio de Janeiro - RJ<br>
+CEP: 21675-310
+</p>
+</div>
+
+<div class="section">
+<h2>🕒 Horários</h2>
+<p><strong>Presencial:</strong> Todos os dias 14:00 às 23:00</p>
+<p><strong>Delivery:</strong> Terça a Domingo 15:00 às 22:00</p>
+</div>
+
+<div class="section">
+<h2>📲 Faça seu Pedido</h2>
+<a class="button" href="https://wa.me/5521964154361" target="_blank">
+Pedir pelo WhatsApp
+</a>
+</div>
+
+</body>
+</html>

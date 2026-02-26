@@ -1,0 +1,8 @@
+{
+"name": "Kiosque do Açaí RJ",
+"short_name": "Açaí RJ",
+"start_url": "index.html",
+"display": "standalone",
+"background_color": "#6B21A8",
+"theme_color": "#6B21A8"
+}
