@@ -37,6 +37,8 @@ self.addEventListener("fetch", (event) => {
         // cache básico para arquivos do mesmo domínio
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        const CACHE_VERSION = "v4";
+    
         return response;
       }).catch(() => cached);
     })
