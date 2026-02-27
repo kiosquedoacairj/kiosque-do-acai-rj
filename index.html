@@ -530,26 +530,26 @@
 <script>
 (() => {
   // ========= Config =========
-  const WHATSAPP_NUMBER_E164 = "5521964154361"; // 55 + DDD + número (sem espaços)
-  const INSTAGRAM_URL = "https://instagram.com/SEU_INSTAGRAM_AQUI"; // troque aqui
+  const WHATSAPP_NUMBER_E164 = "5521964154361"; // 55 + 21 + 964154361 (sem espaços)
+  const INSTAGRAM_URL = "https://instagram.com/https://www.instagram.com/kiosquedoacairj?igsh=aHJoNWg2MXk2Z3A1"; // https://www.instagram.com/kiosquedoacairj?igsh=aHJoNWg2MXk2Z3A1
   const ADDRESS_TEXT = "Rua Luís Coutinho Cavalcante, 191 — Quiosque 4 - Guadalupe — Rio de Janeiro - RJ — CEP: 21675-310";
 
   // ========= Menu =========
   const copos = [
     { id:"copo-100",  name:"Copo 100ml",  price:3.00,  desc:"Tamanho pequeno" },
     { id:"copo-150",  name:"Copo 150ml",  price:5.00,  desc:"Tamanho pequeno" },
-    { id:"copo-200",  name:"Copo 200ml",  price:7.00,  desc:"Tamanho médio" },
+    { id:"copo-200",  name:"Copo 200ml",  price:7.00,  desc:"Tamanho pequeno" },
     { id:"copo-300",  name:"Copo 300ml",  price:9.00,  desc:"Tamanho médio" },
-    { id:"copo-400",  name:"Copo 400ml",  price:13.00, desc:"Tamanho grande" },
-    { id:"copo-500",  name:"Copo 500ml",  price:15.00, desc:"Tamanho grande" },
-    { id:"copo-770",  name:"Copo 770ml",  price:18.00, desc:"Tamanho família" },
-    { id:"copo-1l",   name:"Copo 1L",     price:25.00, desc:"Tamanho família" },
+    { id:"copo-400",  name:"Copo 400ml",  price:13.00, desc:"Tamanho médio" },
+    { id:"copo-500",  name:"Copo 500ml",  price:15.00, desc:"Tamanho médio" },
+    { id:"copo-770",  name:"Copo 770ml",  price:18.00, desc:"Tamanho grande" },
+    { id:"copo-1l",   name:"Copo 1L",     price:25.00, desc:"Tamanho grande" },
   ];
 
   const potes = [
-    { id:"pote-2l-sorvete", name:"Pote 2L Sorvete", price:35.00, desc:"Pote grande" },
-    { id:"pote-2l-acai",    name:"Pote 2L Açaí",    price:45.00, desc:"Pote grande" },
-    { id:"pote-2l-misto",   name:"Pote 2L Açaí e Sorvete", price:45.00, desc:"Pote grande" },
+    { id:"pote-2l-sorvete", name:"Pote 2L Sorvete", price:35.00, desc:"Tamanho família" },
+    { id:"pote-2l-acai",    name:"Pote 2L Açaí",    price:45.00, desc:"Tamanho família" },
+    { id:"pote-2l-misto",   name:"Pote 2L Açaí e Sorvete", price:45.00, desc:"Tamanho família" },
   ];
 
   const saboresAcai = ["Natural","Banana","Morango","Maracujá","Cupuaçú","Nutella","Kinder Ovo","Rafaello","Ferrero Rocher","Óreo"];
@@ -587,7 +587,33 @@
     { id:"bala-mista", name:"Bala coração e café (4 un)", price:1.00, desc:"Pacotinho" },
     { id:"amendoim", name:"Amendoim", price:1.50, desc:"Salgadinho" },
   ];
+function renderizarCardapio(){
+  const acaiDiv = document.getElementById("acai");
+  const bebidasDiv = document.getElementById("bebidas");
+  const lanchesDiv = document.getElementById("lanches");
 
+  function montarLista(lista){
+    return `
+      <ul style="line-height:1.8; padding-left:18px; margin:10px 0 0 0">
+        ${lista.map(i => `<li>${i} <button style="margin-left:8px" onclick="addItem('${i.replace(/'/g,"\\'")}')">Adicionar</button></li>`).join("")}
+      </ul>
+    `;
+  }
+
+  acaiDiv.innerHTML = montarLista(cardapio.acai);
+  bebidasDiv.innerHTML = montarLista(cardapio.bebidas);
+  lanchesDiv.innerHTML = montarLista(cardapio.lanches);
+}
+
+/* ✅ adiciona item no campo do pedido */
+function addItem(txt){
+  const area = document.getElementById("pedido");
+  const atual = area.value.trim();
+  area.value = atual ? (atual + "\n" + "- " + txt) : ("- " + txt);
+}
+
+/* chama ao carregar */
+window.addEventListener("DOMContentLoaded", renderizarCardapio);
   // ========= Helpers =========
   const money = (n) => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
