@@ -390,7 +390,77 @@
       lista.appendChild(row);
     });
   }
+<div class="sep"></div>
 
+lines.push(`💰 *Total:* ${money(total)}`);
+
+if(selecionados.coberturas.size){
+  lines.push("");
+  lines.push("🍫 *Coberturas:*");
+  Array.from(selecionados.coberturas).forEach(c => lines.push(`- ${c}`));
+}
+
+if(selecionados.complementos.size){
+  lines.push("");
+  lines.push("🥣 *Complementos:*");
+  Array.from(selecionados.complementos).forEach(c => lines.push(`- ${c}`));
+}
+
+if(obs) {
+  lines.push("");
+  lines.push(`📝 *Obs:* ${obs}`);
+}lines.push(`💰 *Total:* ${money(total)}`);
+
+if(selecionados.coberturas.size){
+  lines.push("");
+  lines.push("🍫 *Coberturas:*");
+  Array.from(selecionados.coberturas).forEach(c => lines.push(`- ${c}`));
+}
+
+if(selecionados.complementos.size){
+  lines.push("");
+  lines.push("🥣 *Complementos:*");
+  Array.from(selecionados.complementos).forEach(c => lines.push(`- ${c}`));
+}
+
+if(obs) {
+  lines.push("");
+  lines.push(`📝 *Obs:* ${obs}`);
+}
+// Guarda seleções
+let selecionados = {
+  coberturas: new Set(),
+  complementos: new Set()
+};
+
+function renderChecks(lista, containerId, tipo){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+  box.innerHTML = "";
+
+  lista.forEach((nome) => {
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div style="min-width:0">
+        <div class="name">${nome}</div>
+        <div class="desc">Marque para adicionar ao pedido</div>
+      </div>
+      <div>
+        <input type="checkbox" style="width:22px;height:22px;cursor:pointer" />
+      </div>
+    `;
+    const chk = row.querySelector("input");
+
+    chk.checked = selecionados[tipo].has(nome);
+    chk.addEventListener("change", () => {
+      if(chk.checked) selecionados[tipo].add(nome);
+      else selecionados[tipo].delete(nome);
+    });
+
+    box.appendChild(row);
+  });
+}
   let cart = [];
   function addToCart(it){
     const idx = cart.findIndex(x => x.name === it.name && x.price === it.price);
