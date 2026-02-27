@@ -42,16 +42,14 @@
       backdrop-filter: blur(10px);
     }
     .brand{display:flex;gap:12px;align-items:center}
-    .logo{<div style="display:flex;align-items:center;gap:12px">
-  <img src="./logo.png" alt="Logo Kiosque do Açaí" style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(255,255,255,.3)">
-  <div>
-    <h1 style="margin:0;font-size:18px">Kiosque do Açaí RJ</h1>
-    <p style="margin:2px 0 0 0;font-size:12px;color:rgba(255,255,255,.8)">Desde 2018 • Tradicional e Gourmet</p>
-  </div>
-</div>
-      width:42px;height:42px;border-radius:14px;
-      background: radial-gradient(circle at 30% 30%, var(--amarelo), var(--roxo));
-      border:1px solid rgba(255,255,255,.2);
+    .logo{
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.3);
+      object-fit:cover;
+      display:block;
+      background: rgba(255,255,255,.08);
     }
     .brand h1{margin:0;font-size:16px}
     .brand p{margin:2px 0 0 0;font-size:12px;color:var(--muted)}
@@ -98,15 +96,17 @@
     .btnYellow{background: linear-gradient(90deg, var(--amarelo), #ffe57a); color:#1a102d; border:1px solid rgba(0,0,0,.12)}
     .btnDanger{background: rgba(239,68,68,.18); border:1px solid rgba(239,68,68,.35)}
     .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .kiosk{<div class="kiosk">
-  <img src="./quiosque.jpg" alt="Foto do Kiosque do Açaí"
-       style="width:100%;height:100%;object-fit:cover;border-radius:18px;">
-  <div class="badge">🏪 Nosso quiosque oficial</div>
-</div>
-      width:100%;height:260px;border-radius:var(--r);
+
+    .kiosk{
+      width:100%;
+      height:260px;
+      border-radius:var(--r);
       border:1px solid var(--border);
-      overflow:hidden; background: rgba(0,0,0,.18);
-      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+      background: rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       position:relative;
     }
     .kiosk img{width:100%;height:100%;object-fit:cover;display:block}
@@ -117,6 +117,7 @@
       padding:8px 10px;border-radius:999px;
       font-size:12px;font-weight:900;
     }
+
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .tab{
       padding:10px 12px;border-radius:999px;
@@ -156,10 +157,10 @@
   <div class="wrap">
     <header class="top">
       <div class="brand">
-        <div class="logo"></div>
+        <img class="logo" src="./logo.png" alt="Logo Kiosque do Açaí" />
         <div>
           <h1>Kiosque do Açaí RJ</h1>
-          <p>Roxo Açaí 💜 • Amarelo Gema 🥭 • Pedido completo no WhatsApp</p>
+          <p>Desde 2018 • Tradicional e Gourmet • Pedido completo no WhatsApp</p>
         </div>
       </div>
 
@@ -199,14 +200,10 @@
           </div>
 
           <div class="kiosk">
-            <!-- ✅ FOTO: coloque o arquivo quiosque.jpg na RAIZ do projeto (mesma pasta do index.html) -->
-            <img id="imgKiosk" src="./quiosque.jpg" alt="Imagem do quiosque"
-                 onerror="this.style.display='none'; document.getElementById('kioskFallback').style.display='block';">
+            <img src="./quiosque.jpg" alt="Foto do quiosque" onerror="this.style.display='none'; document.getElementById('kioskFallback').style.display='block';">
             <div id="kioskFallback" style="display:none;text-align:center;padding:18px;max-width:360px">
               <div style="font-weight:950">A foto do quiosque não carregou</div>
-              <div class="small" style="margin-top:6px">
-                Envie a imagem com o nome <b>quiosque.jpg</b> na mesma pasta do <b>index.html</b>.
-              </div>
+              <div class="small" style="margin-top:6px">Confira se você enviou <b>quiosque.jpg</b> na mesma pasta do <b>index.html</b>.</div>
             </div>
             <div class="badge">🏪 Nosso quiosque</div>
           </div>
@@ -216,9 +213,9 @@
           <div class="chip" style="width:max-content">🍽️ Cardápio</div>
 
           <div class="tabs" role="tablist">
-            <button class="tab active" id="tabAcai">Copos & Potes</button>
-            <button class="tab" id="tabBeb">Bebidas</button>
-            <button class="tab" id="tabLan">Lanchinhos</button>
+            <button class="tab active" id="tabAcai" type="button">Copos & Potes</button>
+            <button class="tab" id="tabBeb" type="button">Bebidas</button>
+            <button class="tab" id="tabLan" type="button">Lanchinhos</button>
           </div>
 
           <div id="lista" class="list"></div>
@@ -269,16 +266,12 @@
           </div>
 
           <div class="btnRow" style="margin-top:12px">
-            <button class="btn btnPurple" id="btnEnviar">📲 Enviar pedido</button>
-            <button class="btn btnDanger" id="btnLimpar">Limpar</button>
+            <button class="btn btnPurple" id="btnEnviar" type="button">📲 Enviar pedido</button>
+            <button class="btn btnDanger" id="btnLimpar" type="button">Limpar</button>
           </div>
 
           <div id="warnClosed" class="small" style="display:none;margin-top:10px">
             🚫 Delivery fechado agora (Ter–Dom 15:00–22:00). O botão de enviar fica bloqueado.
-          </div>
-
-          <div class="small" style="margin-top:10px">
-            <b>Teste rápido:</b> adicione 1 item → preencha Nome/Endereço → Enviar → WhatsApp abre com a mensagem completa.
           </div>
         </div>
       </aside>
@@ -287,12 +280,10 @@
 
 <script>
 (() => {
-  // ✅ Seus links
-  const WHATSAPP_NUMBER_E164 = "5521964154361"; // usado para enviar pedido com mensagem pronta
-  const WHATSAPP_CONTACT_LINK = "https://wa.me/message/T7XQ5XK2KSF2O1"; // botão de contato
+  const WHATSAPP_NUMBER_E164 = "5521964154361";
+  const WHATSAPP_CONTACT_LINK = "https://wa.me/message/T7XQ5XK2KSF2O1";
   const INSTAGRAM_URL = "https://www.instagram.com/kiosquedoacairj?igsh=aHJoNWg2MXk2Z3A1";
 
-  // ✅ Cardápio (3 abas)
   const MENU = {
     acai: [
       { name:"Copo 100ml", price:3.00, desc:"" },
@@ -329,20 +320,17 @@
     ]
   };
 
-  // Helpers
   const money = (n) => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-  // Delivery open? (Terça a Domingo 15:00–22:00)
   function isDeliveryOpenNow(){
     const now = new Date();
-    const day = now.getDay(); // 0 dom, 1 seg, 2 ter...
+    const day = now.getDay(); // 0 dom, 1 seg
     const mins = now.getHours()*60 + now.getMinutes();
     const open = 15*60, close = 22*60;
     const isMonday = (day === 1);
     return (!isMonday) && (mins >= open) && (mins <= close);
   }
 
-  // DOM refs
   const btnWhatsContato = document.getElementById("btnWhatsContato");
   const btnInsta = document.getElementById("btnInsta");
   const chipDelivery = document.getElementById("chipDelivery");
@@ -365,11 +353,9 @@
   const btnEnviar = document.getElementById("btnEnviar");
   const btnLimpar = document.getElementById("btnLimpar");
 
-  // Links
   btnWhatsContato.href = WHATSAPP_CONTACT_LINK;
   btnInsta.href = INSTAGRAM_URL;
 
-  // Tabs + render
   let active = "acai";
   function setActive(tab){
     active = tab;
@@ -405,8 +391,7 @@
     });
   }
 
-  // Cart
-  let cart = []; // {name, price, qty}
+  let cart = [];
   function addToCart(it){
     const idx = cart.findIndex(x => x.name === it.name && x.price === it.price);
     if(idx >= 0) cart[idx].qty += 1;
@@ -428,8 +413,8 @@
           <div class="desc">Unit: ${money(it.price)} • Subtotal: <b>${money(sub)}</b></div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn" type="button" aria-label="menos">−</button>
-          <button class="btn" type="button" aria-label="mais">+</button>
+          <button class="btn" type="button">−</button>
+          <button class="btn" type="button">+</button>
         </div>
       `;
       const [minus, plus] = line.querySelectorAll("button");
@@ -454,7 +439,6 @@
     renderCart();
   });
 
-  // Delivery UI
   function updateDeliveryUI(){
     const open = isDeliveryOpenNow();
     if(open){
@@ -470,7 +454,6 @@
     }
   }
 
-  // Send order
   btnEnviar.addEventListener("click", () => {
     if(!isDeliveryOpenNow()){
       alert("Delivery fechado no momento (Ter–Dom 15:00–22:00).");
@@ -507,7 +490,6 @@
     window.open(url, "_blank", "noopener");
   });
 
-  // Init
   setActive("acai");
   renderCart();
   updateDeliveryUI();
