@@ -326,7 +326,71 @@
       { name:"Amendoim", price:1.50, desc:"" },
     ]
   };
+<div class="sep"></div>
 
+<div class="chip" style="width:max-content">🍇 Sabor do Açaí</div>
+<div id="saboresAcaiBox" class="list" style="margin-top:10px"></div>
+
+<div class="sep"></div>
+
+<div class="chip" style="width:max-content">🍦 Sabor do Sorvete</div>
+<div id="saboresSorveteBox" class="list" style="margin-top:10px"></div>
+  const SABORES_ACAI = [
+  "Natural","Banana","Morango","Maracujá","Cupuacu","Nutella","Kinder Ovo","Rafaello","Ferrero Rocher","Óreo"
+];
+
+const SABORES_SORVETE = [
+  "Flocos","Bombom de Morango","Ovo Maltine","Ninho Trufado","Torta Alemã","Pavê Italiano"
+];
+
+// Seleção única (um sabor por vez)
+let saborSelecionado = {
+  acai: null,
+  sorvete: null
+};
+
+function renderRadios(lista, containerId, tipo){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+  box.innerHTML = "";
+
+  lista.forEach((nome) => {
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div style="min-width:0">
+        <div class="name">${nome}</div>
+        <div class="desc">Selecione 1 opção</div>
+      </div>
+      <div>
+        <input type="radio" name="radio-${tipo}" style="width:22px;height:22px;cursor:pointer" />
+      </div>
+    `;
+
+    const radio = row.querySelector("input");
+    radio.checked = (saborSelecionado[tipo] === nome);
+
+    radio.addEventListener("change", () => {
+      saborSelecionado[tipo] = nome;
+      // garante atualização visual
+      renderRadios(lista, containerId, tipo);
+    });
+
+    box.appendChild(row);
+  });
+
+  // Botão "limpar seleção" (opcional, mas útil)
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.className = "btn";
+  clear.textContent = "Limpar seleção";
+  clear.style.width = "max-content";
+  clear.addEventListener("click", () => {
+    saborSelecionado[tipo] = null;
+    renderRadios(lista, containerId, tipo);
+  });
+  box.appendChild(clear);
+}
   const COBERTURAS = [
     "Chocolate","Chocolate suíço","Chocomenta","Menta","Morango","Frutas vermelhas","Cereja","Tutti-frutti",
     "Porto blue","Leite condensado","Doce de leite","Caramelo","Banana caramelada","Uva","Amora","Maçã verde",
@@ -486,7 +550,22 @@
     totalEl.textContent = money(total);
   }
 
-  btnLimpar.addEventListener("click", () => {
+  btnLimpar.addEventListener("click", () => {btnLimpar.addEventListener("click", () => {
+  cart = [];
+  renderCart();
+
+  // limpa sabores
+  saborSelecionado.acai = null;
+  saborSelecionado.sorvete = null;
+  renderRadios(SABORES_ACAI, "saboresAcaiBox", "acai");
+  renderRadios(SABORES_SORVETE, "saboresSorveteBox", "sorvete");
+
+  // limpa coberturas/complementos
+  selecionados.coberturas.clear();
+  selecionados.complementos.clear();
+  renderChecks(COBERTURAS, "coberturasBox", "coberturas");
+  renderChecks(COMPLEMENTOS, "complementosBox", "complementos");
+});
     cart = [];
     renderCart();
   });
@@ -537,7 +616,13 @@
     lines.push(`📍 *Endereço:* ${endereco}`);
     lines.push(`💳 *Pagamento:* ${pagamento}`);
     lines.push(`💰 *Total:* ${money(total)}`);
-
+if(saborSelecionado.acai){
+  lines.push("");
+  lines.push(`🍇 *Sabor do Açaí:* ${saborSelecionado.acai}`);
+}
+if(saborSelecionado.sorvete){
+  lines.push(`🍦 *Sabor do Sorvete:* ${saborSelecionado.sorvete}`);
+}
     if(selecionados.coberturas.size){
       lines.push("");
       lines.push("🍫 *Coberturas:*");
@@ -562,6 +647,13 @@
   setActive("acai");
   renderCart();
   updateDeliveryUI();
+  if(saborSelecionado.acai){
+  lines.push("");
+  lines.push(`🍇 *Sabor do Açaí:* ${saborSelecionado.acai}`);
+}
+if(saborSelecionado.sorvete){
+  lines.push(`🍦 *Sabor do Sorvete:* ${saborSelecionado.sorvete}`);
+}
   renderChecks(COBERTURAS, "coberturasBox", "coberturas");
   renderChecks(COMPLEMENTOS, "complementosBox", "complementos");
   setInterval(updateDeliveryUI, 20000);
