@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v12"; // aumente sempre que mexer (v13, v14...)
+const CACHE_VERSION = "v13"; // aumente sempre que mexer (v14, v15...)
 const CACHE_NAME = `kiosque-acai-${CACHE_VERSION}`;
 
 const PRECACHE = [
