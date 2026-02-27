@@ -253,19 +253,18 @@
             <select id="pagamento">
               <option>PIX</option>
               <option>Dinheiro</option>
-              <option>Crédio</option>
-              <option>Débito</option>
+              <option>Cartão</option>
             </select>
           </div>
 
           <div class="sep"></div>
 
-          <div class="chip" style="width:max-content">🍇 Sabor do Açaí</div>
+          <div class="chip" style="width:max-content">🍇 Sabores do Açaí (pode escolher vários)</div>
           <div id="saboresAcaiBox" class="list" style="margin-top:10px"></div>
 
           <div class="sep"></div>
 
-          <div class="chip" style="width:max-content">🍦 Sabor do Sorvete</div>
+          <div class="chip" style="width:max-content">🍦 Sabores do Sorvete (pode escolher vários)</div>
           <div id="saboresSorveteBox" class="list" style="margin-top:10px"></div>
 
           <div class="sep"></div>
@@ -357,8 +356,13 @@
     "Granulado","Jujuba","Biscoitinho biju"
   ];
 
-  let selecionados = { coberturas: new Set(), complementos: new Set() };
-  let saborSelecionado = { acai: null, sorvete: null };
+  // ✅ agora TUDO é multi-seleção
+  let selecionados = {
+    saboresAcai: new Set(),
+    saboresSorvete: new Set(),
+    coberturas: new Set(),
+    complementos: new Set()
+  };
 
   const money = (n) => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
@@ -371,7 +375,7 @@
     return (!isMonday) && (mins >= open) && (mins <= close);
   }
 
-  function renderChecks(lista, containerId, tipo){
+  function renderChecks(lista, containerId, key){
     const box = document.getElementById(containerId);
     if(!box) return;
     box.innerHTML = "";
@@ -381,58 +385,20 @@
       row.innerHTML = `
         <div style="min-width:0">
           <div class="name">${nome}</div>
-          <div class="desc">Marque para adicionar ao pedido</div>
+          <div class="desc">Marque para adicionar</div>
         </div>
         <div>
           <input type="checkbox" style="width:22px;height:22px;cursor:pointer" />
         </div>
       `;
       const chk = row.querySelector("input");
-      chk.checked = selecionados[tipo].has(nome);
+      chk.checked = selecionados[key].has(nome);
       chk.addEventListener("change", () => {
-        if(chk.checked) selecionados[tipo].add(nome);
-        else selecionados[tipo].delete(nome);
+        if(chk.checked) selecionados[key].add(nome);
+        else selecionados[key].delete(nome);
       });
       box.appendChild(row);
     });
-  }
-
-  function renderRadios(lista, containerId, tipo){
-    const box = document.getElementById(containerId);
-    if(!box) return;
-    box.innerHTML = "";
-
-    lista.forEach((nome) => {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div style="min-width:0">
-          <div class="name">${nome}</div>
-          <div class="desc">Selecione 1 opção</div>
-        </div>
-        <div>
-          <input type="radio" name="radio-${tipo}" style="width:22px;height:22px;cursor:pointer" />
-        </div>
-      `;
-      const radio = row.querySelector("input");
-      radio.checked = (saborSelecionado[tipo] === nome);
-      radio.addEventListener("change", () => {
-        saborSelecionado[tipo] = nome;
-        renderRadios(lista, containerId, tipo);
-      });
-      box.appendChild(row);
-    });
-
-    const clear = document.createElement("button");
-    clear.type = "button";
-    clear.className = "btn";
-    clear.textContent = "Limpar seleção";
-    clear.style.width = "max-content";
-    clear.addEventListener("click", () => {
-      saborSelecionado[tipo] = null;
-      renderRadios(lista, containerId, tipo);
-    });
-    box.appendChild(clear);
   }
 
   const btnWhatsContato = document.getElementById("btnWhatsContato");
@@ -541,13 +507,10 @@
     cart = [];
     renderCart();
 
-    saborSelecionado.acai = null;
-    saborSelecionado.sorvete = null;
-    selecionados.coberturas.clear();
-    selecionados.complementos.clear();
-
-    renderRadios(SABORES_ACAI, "saboresAcaiBox", "acai");
-    renderRadios(SABORES_SORVETE, "saboresSorveteBox", "sorvete");
+    // limpa tudo
+    Object.values(selecionados).forEach(set => set.clear());
+    renderChecks(SABORES_ACAI, "saboresAcaiBox", "saboresAcai");
+    renderChecks(SABORES_SORVETE, "saboresSorveteBox", "saboresSorvete");
     renderChecks(COBERTURAS, "coberturasBox", "coberturas");
     renderChecks(COMPLEMENTOS, "complementosBox", "complementos");
   });
@@ -599,12 +562,16 @@
     lines.push(`💳 *Pagamento:* ${pagamento}`);
     lines.push(`💰 *Total:* ${money(total)}`);
 
-    if(saborSelecionado.acai){
+    if(selecionados.saboresAcai.size){
       lines.push("");
-      lines.push(`🍇 *Sabor do Açaí:* ${saborSelecionado.acai}`);
+      lines.push("🍇 *Sabores do Açaí:*");
+      Array.from(selecionados.saboresAcai).forEach(s => lines.push(`- ${s}`));
     }
-    if(saborSelecionado.sorvete){
-      lines.push(`🍦 *Sabor do Sorvete:* ${saborSelecionado.sorvete}`);
+
+    if(selecionados.saboresSorvete.size){
+      lines.push("");
+      lines.push("🍦 *Sabores do Sorvete:*");
+      Array.from(selecionados.saboresSorvete).forEach(s => lines.push(`- ${s}`));
     }
 
     if(selecionados.coberturas.size){
@@ -632,8 +599,8 @@
   setActive("acai");
   renderCart();
   updateDeliveryUI();
-  renderRadios(SABORES_ACAI, "saboresAcaiBox", "acai");
-  renderRadios(SABORES_SORVETE, "saboresSorveteBox", "sorvete");
+  renderChecks(SABORES_ACAI, "saboresAcaiBox", "saboresAcai");
+  renderChecks(SABORES_SORVETE, "saboresSorveteBox", "saboresSorvete");
   renderChecks(COBERTURAS, "coberturasBox", "coberturas");
   renderChecks(COMPLEMENTOS, "complementosBox", "complementos");
   setInterval(updateDeliveryUI, 20000);
