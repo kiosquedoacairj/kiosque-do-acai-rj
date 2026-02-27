@@ -43,12 +43,9 @@
     }
     .brand{display:flex;gap:12px;align-items:center}
     .logo{
-      width:60px;
-      height:60px;
-      border-radius:50%;
+      width:60px;height:60px;border-radius:50%;
       border:2px solid rgba(255,255,255,.3);
-      object-fit:cover;
-      display:block;
+      object-fit:cover;display:block;
       background: rgba(255,255,255,.08);
     }
     .brand h1{margin:0;font-size:16px}
@@ -58,8 +55,7 @@
       padding:8px 10px;border-radius:999px;
       background: rgba(255,255,255,.08);
       border:1px solid var(--border);
-      font-size:12px;
-      font-weight:800;
+      font-size:12px;font-weight:800;
     }
     .dot{width:9px;height:9px;border-radius:999px;background:var(--bad)}
     .open .dot{background:var(--ok)}
@@ -157,7 +153,7 @@
   <div class="wrap">
     <header class="top">
       <div class="brand">
-        <img class="logo" src="./logo.png" alt="Logo Kiosque do Açaí" />
+        <img class="logo" src="logo.png" alt="Logo Kiosque do Açaí" />
         <div>
           <h1>Kiosque do Açaí RJ</h1>
           <p>Desde 2018 • Tradicional e Gourmet • Pedido completo no WhatsApp</p>
@@ -200,7 +196,8 @@
           </div>
 
           <div class="kiosk">
-            <img src="./quiosque.jpg" alt="Foto do quiosque" onerror="this.style.display='none'; document.getElementById('kioskFallback').style.display='block';">
+            <img src="quiosque.jpg" alt="Foto do quiosque"
+                 onerror="this.style.display='none'; document.getElementById('kioskFallback').style.display='block';">
             <div id="kioskFallback" style="display:none;text-align:center;padding:18px;max-width:360px">
               <div style="font-weight:950">A foto do quiosque não carregou</div>
               <div class="small" style="margin-top:6px">Confira se você enviou <b>quiosque.jpg</b> na mesma pasta do <b>index.html</b>.</div>
@@ -259,6 +256,16 @@
               <option>Cartão</option>
             </select>
           </div>
+
+          <div class="sep"></div>
+
+          <div class="chip" style="width:max-content">🍫 Coberturas</div>
+          <div id="coberturasBox" class="list" style="margin-top:10px"></div>
+
+          <div class="sep"></div>
+
+          <div class="chip" style="width:max-content">🥣 Complementos</div>
+          <div id="complementosBox" class="list" style="margin-top:10px"></div>
 
           <div class="field">
             <label>Observações (opcional)</label>
@@ -320,6 +327,22 @@
     ]
   };
 
+  const COBERTURAS = [
+    "Chocolate","Chocolate suíço","Chocomenta","Menta","Morango","Frutas vermelhas","Cereja","Tutti-frutti",
+    "Porto blue","Leite condensado","Doce de leite","Caramelo","Banana caramelada","Uva","Amora","Maçã verde",
+    "Kiwi","Milho verde","Limão","Graviola","Maracujá","Abacaxi","Café","Fini Beijos (+R$1,00)"
+  ];
+
+  const COMPLEMENTOS = [
+    "Paçoca","Amendoim picado","Leite em pó","Granola","Aveia","Choco ball","Sucrilhos","Cereal colorido",
+    "Granulado","Jujuba","Biscoitinho biju"
+  ];
+
+  let selecionados = {
+    coberturas: new Set(),
+    complementos: new Set()
+  };
+
   const money = (n) => n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
   function isDeliveryOpenNow(){
@@ -329,6 +352,35 @@
     const open = 15*60, close = 22*60;
     const isMonday = (day === 1);
     return (!isMonday) && (mins >= open) && (mins <= close);
+  }
+
+  function renderChecks(lista, containerId, tipo){
+    const box = document.getElementById(containerId);
+    if(!box) return;
+    box.innerHTML = "";
+
+    lista.forEach((nome) => {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div style="min-width:0">
+          <div class="name">${nome}</div>
+          <div class="desc">Marque para adicionar ao pedido</div>
+        </div>
+        <div>
+          <input type="checkbox" style="width:22px;height:22px;cursor:pointer" />
+        </div>
+      `;
+      const chk = row.querySelector("input");
+
+      chk.checked = selecionados[tipo].has(nome);
+      chk.addEventListener("change", () => {
+        if(chk.checked) selecionados[tipo].add(nome);
+        else selecionados[tipo].delete(nome);
+      });
+
+      box.appendChild(row);
+    });
   }
 
   const btnWhatsContato = document.getElementById("btnWhatsContato");
@@ -390,77 +442,7 @@
       lista.appendChild(row);
     });
   }
-<div class="sep"></div>
 
-lines.push(`💰 *Total:* ${money(total)}`);
-
-if(selecionados.coberturas.size){
-  lines.push("");
-  lines.push("🍫 *Coberturas:*");
-  Array.from(selecionados.coberturas).forEach(c => lines.push(`- ${c}`));
-}
-
-if(selecionados.complementos.size){
-  lines.push("");
-  lines.push("🥣 *Complementos:*");
-  Array.from(selecionados.complementos).forEach(c => lines.push(`- ${c}`));
-}
-
-if(obs) {
-  lines.push("");
-  lines.push(`📝 *Obs:* ${obs}`);
-}lines.push(`💰 *Total:* ${money(total)}`);
-
-if(selecionados.coberturas.size){
-  lines.push("");
-  lines.push("🍫 *Coberturas:*");
-  Array.from(selecionados.coberturas).forEach(c => lines.push(`- ${c}`));
-}
-
-if(selecionados.complementos.size){
-  lines.push("");
-  lines.push("🥣 *Complementos:*");
-  Array.from(selecionados.complementos).forEach(c => lines.push(`- ${c}`));
-}
-
-if(obs) {
-  lines.push("");
-  lines.push(`📝 *Obs:* ${obs}`);
-}
-// Guarda seleções
-let selecionados = {
-  coberturas: new Set(),
-  complementos: new Set()
-};
-
-function renderChecks(lista, containerId, tipo){
-  const box = document.getElementById(containerId);
-  if(!box) return;
-  box.innerHTML = "";
-
-  lista.forEach((nome) => {
-    const row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = `
-      <div style="min-width:0">
-        <div class="name">${nome}</div>
-        <div class="desc">Marque para adicionar ao pedido</div>
-      </div>
-      <div>
-        <input type="checkbox" style="width:22px;height:22px;cursor:pointer" />
-      </div>
-    `;
-    const chk = row.querySelector("input");
-
-    chk.checked = selecionados[tipo].has(nome);
-    chk.addEventListener("change", () => {
-      if(chk.checked) selecionados[tipo].add(nome);
-      else selecionados[tipo].delete(nome);
-    });
-
-    box.appendChild(row);
-  });
-}
   let cart = [];
   function addToCart(it){
     const idx = cart.findIndex(x => x.name === it.name && x.price === it.price);
@@ -549,12 +531,29 @@ function renderChecks(lista, containerId, tipo){
     lines.push("");
     lines.push("🍧 *Itens:*");
     cart.forEach(it => lines.push(`- ${it.qty}x ${it.name} (${money(it.price)})`));
+
     lines.push("");
     lines.push(`🧑 *Nome:* ${nome}`);
     lines.push(`📍 *Endereço:* ${endereco}`);
     lines.push(`💳 *Pagamento:* ${pagamento}`);
     lines.push(`💰 *Total:* ${money(total)}`);
-    if(obs) lines.push(`📝 *Obs:* ${obs}`);
+
+    if(selecionados.coberturas.size){
+      lines.push("");
+      lines.push("🍫 *Coberturas:*");
+      Array.from(selecionados.coberturas).forEach(c => lines.push(`- ${c}`));
+    }
+
+    if(selecionados.complementos.size){
+      lines.push("");
+      lines.push("🥣 *Complementos:*");
+      Array.from(selecionados.complementos).forEach(c => lines.push(`- ${c}`));
+    }
+
+    if(obs){
+      lines.push("");
+      lines.push(`📝 *Obs:* ${obs}`);
+    }
 
     const url = `https://wa.me/${WHATSAPP_NUMBER_E164}?text=${encodeURIComponent(lines.join("\n"))}`;
     window.open(url, "_blank", "noopener");
@@ -563,6 +562,8 @@ function renderChecks(lista, containerId, tipo){
   setActive("acai");
   renderCart();
   updateDeliveryUI();
+  renderChecks(COBERTURAS, "coberturasBox", "coberturas");
+  renderChecks(COMPLEMENTOS, "complementosBox", "complementos");
   setInterval(updateDeliveryUI, 20000);
 })();
 </script>
